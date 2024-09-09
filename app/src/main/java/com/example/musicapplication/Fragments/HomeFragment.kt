@@ -2,27 +2,22 @@ package com.example.musicapplication.Fragments
 
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
-import androidx.appcompat.widget.SearchView
 import androidx.appcompat.widget.SearchView.OnQueryTextListener
-import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.asLiveData
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.example.musicapplication.AddSongActivity.AddSongAdapter
+import com.example.musicapplication.SongListActivity.AddSongAdapter
 import com.example.musicapplication.DataBase.SongDb
 import com.example.musicapplication.DataBase.SongInstance
 import com.example.musicapplication.SongActivity.SongActivity
-import com.example.musicapplication.SongAdapter
-import com.example.musicapplication.databinding.FragmentSongsPlaylistBinding
+import com.example.musicapplication.SongListActivity.SongList
+import com.example.musicapplication.databinding.FragmentTemplateBinding
 
-
-class SongsPlaylistFragment : Fragment(),  SongAdapter.Listener, AddSongAdapter.Listener {
-    private lateinit var binding: FragmentSongsPlaylistBinding
+class HomeFragment : Fragment(),  SongAdapter.Listener, AddSongAdapter.Listener {
+    private lateinit var binding: FragmentTemplateBinding
     private val songAdapter = SongAdapter(this)
     private var songList = ArrayList<SongInstance>()
 
@@ -30,7 +25,7 @@ class SongsPlaylistFragment : Fragment(),  SongAdapter.Listener, AddSongAdapter.
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        binding = FragmentSongsPlaylistBinding.inflate(layoutInflater)
+        binding = FragmentTemplateBinding.inflate(layoutInflater)
         init()
         return binding.root
     }
@@ -41,26 +36,39 @@ class SongsPlaylistFragment : Fragment(),  SongAdapter.Listener, AddSongAdapter.
     }
 
     companion object {
-
         @JvmStatic
-        fun newInstance() = SongsPlaylistFragment()
+        fun newInstance() = HomeFragment()
     }
 
-    private fun fragmentData() {
-        binding.apply {
-            recyclerView.layoutManager = LinearLayoutManager(activity)
-            recyclerView.adapter = songAdapter
-        }
+    private fun fragmentData() = with(binding) {
+        songsRecyclerView.layoutManager = LinearLayoutManager(activity, LinearLayoutManager.HORIZONTAL, false)
+        songsRecyclerView.adapter = songAdapter
 
         val db = SongDb.getDb(requireContext())
         db.getDao().getAllSong().asLiveData().observe(requireActivity()) {
             songAdapter.addSongs(it as ArrayList<SongInstance>)
             songList = it
+            if (it.isEmpty()) {
+                content.visibility = View.GONE
+                firstEmptyView.visibility = View.VISIBLE
+                secondEmptyView.visibility = View.VISIBLE
+            }
+            else {
+                content.visibility = View.VISIBLE
+                firstEmptyView.visibility = View.GONE
+                secondEmptyView.visibility = View.GONE
+            }
+        }
+
+        buttonExpandSongs.setOnClickListener {
+            startActivity(Intent(activity, SongList::class.java).apply {
+                putExtra("expand", "home")
+            })
         }
     }
 
-    private fun search() {
-        val searchView = binding.searchView
+    private fun search() = with(binding) {
+        val searchView = searchView
         searchView.clearFocus()
         searchView.setOnQueryTextListener(object : OnQueryTextListener
         {
@@ -78,31 +86,19 @@ class SongsPlaylistFragment : Fragment(),  SongAdapter.Listener, AddSongAdapter.
     private fun filterList(text: String?) {
         val filteredList: ArrayList<SongInstance> = ArrayList()
         for (song in songList) {
-            if (song.title.lowercase().contains(text!!.lowercase())) {
+            if (song.title.lowercase().filterNot { it.isWhitespace() }.contains(text!!.lowercase())) {
                 filteredList.add(song)
             }
         }
 
-        if (filteredList.isEmpty()) {
-            songAdapter.clear()
-            binding.noSongsFound.visibility = View.VISIBLE
-        }
-        else {
-            songAdapter.editSongList(filteredList)
-            binding.noSongsFound.visibility = View.GONE
-        }
+        if (filteredList.isEmpty()) songAdapter.clear()
+        else songAdapter.editSongList(filteredList)
     }
 
     override fun onClick(song: SongInstance) {
+        val data = arrayListOf(song.id, 0)
         startActivity(Intent(activity, SongActivity::class.java).apply {
-            putExtra("songId", song.id)
+            putExtra("songId", data)
         })
-    }
-
-    override fun onClickRemove(song: SongInstance) {
-        val db = SongDb.getDb(requireContext())
-        Thread {
-            db.getDao().deleteSong(song)
-        }.start()
     }
 }

@@ -13,3 +13,14 @@ data class SongInstance(
     @ColumnInfo(name = "song") val song: Int
 )
 
+@Entity(tableName = "addSongs")
+data class AddSongInstance(
+    @PrimaryKey(autoGenerate = true) val id: Int?,
+    @ColumnInfo(name = "image") val image: Int,
+    @ColumnInfo(name = "title") val title: String,
+    @ColumnInfo(name = "author") val author: String,
+    @ColumnInfo(name = "song") val song: Int
+)
+
+
+

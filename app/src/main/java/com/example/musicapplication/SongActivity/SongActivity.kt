@@ -22,8 +22,10 @@ class SongActivity : AppCompatActivity() {
     private lateinit var runnable: Runnable
     private var handler = Handler()
     private var mediaPlayer : MediaPlayer? = null
-    private var songId: Int? = null
+    private var originalSong: SongInstance? = null
     private var repeatId: Int = 0
+    private var originalSongId: Int? = null
+    private var songFrom: Int? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -33,43 +35,55 @@ class SongActivity : AppCompatActivity() {
 
         toolbar()
 
-        songId = intent.getIntExtra("songId", 0)
-        val db = SongDb.getDb(this)
-        db.getDao().getSongById(songId!!).asLiveData().observe(this@SongActivity) {
-            activityData(it, false)
-
-            playAndPause()
-            nextSong()
-            previousSong()
-
-            repeatSong()
-
-            mediaPlayer()
-        }
+        val dataFromFragment = intent.getIntegerArrayListExtra("songId")
+        originalSongId = dataFromFragment!!.first()
+        songFrom = dataFromFragment.last()
+        getData()
     }
 
-    private fun toolbar() {
-        binding.apply {
-            songActivityInclude.buttonBack.setOnClickListener {
-                finish()
-                mediaPlayer!!.stop()
-            }
+    private fun toolbar() = with(binding) {
+        songActivityInclude.buttonBack.setOnClickListener {
+            finish()
+            mediaPlayer!!.stop()
+        }
+        songActivityInclude.appTitle.visibility = View.GONE
+    }
 
-            songActivityInclude.songListButton.visibility = View.GONE
+    private fun songFunctionality(song: SongInstance) {
+        originalSong = song
+        activityData(song, false)
+
+        playAndPause()
+        nextSong()
+        previousSong()
+        repeatSong()
+        mediaPlayer()
+    }
+
+    private fun getData() {
+        val db = SongDb.getDb(this)
+        if (songFrom == 0) {
+            db.getDao().getSongByIdFromHome(originalSongId!!).asLiveData().observe(this@SongActivity) {
+                songFunctionality(it)
+            }
+        }
+        else {
+            db.getDao().getSongByIdFromBrowse(originalSongId!!).asLiveData().observe(this@SongActivity) {
+                songFunctionality(it)
+            }
         }
     }
 
     private fun activityData(songInstance: SongInstance, songState: Boolean = true) {
-        if (songState) { mediaPlayer!!.pause() }
+        if (songState) mediaPlayer!!.stop()
         mediaPlayer = MediaPlayer.create(this, songInstance.song)
-        songId = songInstance.id
+        originalSongId = songInstance.id
         repeatSong()
 
         binding.apply {
             songImage.setImageResource(songInstance.image)
             songName.text = songInstance.title
             songCreater.text = songInstance.author
-
 
             mediaPlayer!!.setOnCompletionListener {
                 if (repeatId != 1) {
@@ -85,99 +99,110 @@ class SongActivity : AppCompatActivity() {
 
     private fun getSong(nextSong: Boolean) {
         val db = SongDb.getDb(this)
-        if (nextSong) {
-            db.getDao().getNextSong(songId!!).asLiveData()
-                .observe(this@SongActivity) { songInstance ->
-                    activityData(songInstance)
-                }
-        } else {
-            db.getDao().getPreviousSong(songId!!).asLiveData()
-                .observe(this@SongActivity) { songInstance ->
-                    activityData(songInstance)
-                }
+        if (songFrom == 0) {
+            if (nextSong) {
+                db.getDao().getNextSongFromHome(originalSongId!!).asLiveData()
+                    .observe(this@SongActivity) { songInstance ->
+                        if (songInstance == null) activityData(originalSong!!)
+                        else activityData(songInstance)
+                    }
+            } else {
+                db.getDao().getPreviousSongFromHome(originalSongId!!).asLiveData()
+                    .observe(this@SongActivity) { songInstance ->
+                        if (songInstance != null) activityData(songInstance)
+                    }
+            }
         }
-    }
-
-    private fun playAndPause() {
-        binding.apply {
-            buttonPlayAndPause.setOnClickListener {
-                if (!mediaPlayer!!.isPlaying) {
-                    mediaPlayer!!.start()
-                    buttonPlayAndPause.setImageResource(R.drawable.ic_pause)
-                }
-                else {
-                    mediaPlayer!!.pause()
-                    buttonPlayAndPause.setImageResource(R.drawable.ic_play)
-                }
+        else {
+            if (nextSong) {
+                db.getDao().getNextSongFromBrowse(originalSongId!!).asLiveData()
+                    .observe(this@SongActivity) { songInstance ->
+                        if (songInstance == null) activityData(originalSong!!)
+                        else activityData(songInstance)
+                    }
+            } else {
+                db.getDao().getPreviousSongFromBrowse(originalSongId!!).asLiveData()
+                    .observe(this@SongActivity) { songInstance ->
+                        if (songInstance != null) activityData(songInstance)
+                    }
             }
         }
     }
 
-    private fun nextSong(state: Boolean = true) {
+    private fun playAndPause() = with(binding) {
+        buttonPlayAndPause.setOnClickListener {
+            if (!mediaPlayer!!.isPlaying) {
+                mediaPlayer!!.start()
+                buttonPlayAndPause.setImageResource(R.drawable.ic_pause)
+            }
+            else {
+                mediaPlayer!!.pause()
+                buttonPlayAndPause.setImageResource(R.drawable.ic_play)
+            }
+        }
+    }
+
+    private fun nextSong(state: Boolean = true) = with(binding) {
         if (state) {
-            binding.buttonNext.setOnClickListener {
+            buttonNext.setOnClickListener {
                 getSong(true)
-                binding.buttonPlayAndPause.setImageResource(R.drawable.ic_pause)
+                buttonPlayAndPause.setImageResource(R.drawable.ic_pause)
             }
         }
         else {
             getSong(true)
-            binding.buttonPlayAndPause.setImageResource(R.drawable.ic_pause)
+            buttonPlayAndPause.setImageResource(R.drawable.ic_pause)
         }
     }
 
-    private fun previousSong() {
-        binding.buttonPrevious.setOnClickListener {
+    private fun previousSong() = with(binding) {
+        buttonPrevious.setOnClickListener {
             getSong(false)
-            binding.buttonPlayAndPause.setImageResource(R.drawable.ic_pause)
+            buttonPlayAndPause.setImageResource(R.drawable.ic_pause)
         }
     }
 
-    private fun repeatSong() {
+    private fun repeatSong() = with(binding) {
         val repeatStates = listOf(
             R.drawable.ic_repeat,
             R.drawable.ic_repeat_on,
         )
 
-        binding.apply {
-            buttonRepeat.setOnClickListener {
-                repeatId += 1
-                if (repeatId == repeatStates.size) repeatId = 0
-                it.setBackgroundResource(repeatStates[repeatId])
-                mediaPlayer!!.isLooping = repeatId == 1
-            }
+        buttonRepeat.setOnClickListener {
+            repeatId += 1
+            if (repeatId == repeatStates.size) repeatId = 0
+            it.setBackgroundResource(repeatStates[repeatId])
+            mediaPlayer!!.isLooping = repeatId == 1
         }
 
         mediaPlayer!!.isLooping = repeatId == 1
     }
 
-    private fun mediaPlayer() {
-        binding.apply {
-            progressBar.progress = 0
-            progressBar.max = mediaPlayer!!.duration
-            progressBar.setOnSeekBarChangeListener(
-                object : SeekBar.OnSeekBarChangeListener {
-                    override fun onProgressChanged(
-                        seekBar: SeekBar?,
-                        position: Int,
-                        changed: Boolean
-                    ) {
-                        if (changed) {
-                            mediaPlayer!!.seekTo(position)
-                        }
+    private fun mediaPlayer() = with(binding) {
+        progressBar.progress = 0
+        progressBar.max = mediaPlayer!!.duration
+        progressBar.setOnSeekBarChangeListener(
+            object : SeekBar.OnSeekBarChangeListener {
+                override fun onProgressChanged(
+                    seekBar: SeekBar?,
+                    position: Int,
+                    changed: Boolean
+                ) {
+                    if (changed) {
+                        mediaPlayer!!.seekTo(position)
                     }
+                }
 
-                    override fun onStartTrackingTouch(seekBar: SeekBar?) {}
-                    override fun onStopTrackingTouch(seekBar: SeekBar?) {}
+                override fun onStartTrackingTouch(seekBar: SeekBar?) {}
+                override fun onStopTrackingTouch(seekBar: SeekBar?) {}
                 }
             )
 
-            runnable = Runnable {
-                progressBar.progress = mediaPlayer!!.currentPosition
-                handler.postDelayed(runnable, 1000)
-            }
+        runnable = Runnable {
+            progressBar.progress = mediaPlayer!!.currentPosition
             handler.postDelayed(runnable, 1000)
         }
+        handler.postDelayed(runnable, 1000)
     }
 }
 

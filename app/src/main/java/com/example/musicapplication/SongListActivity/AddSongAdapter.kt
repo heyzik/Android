@@ -1,19 +1,12 @@
-package com.example.musicapplication.AddSongActivity
+package com.example.musicapplication.SongListActivity
 
 import android.annotation.SuppressLint
-import android.content.Context
-import android.content.Intent
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.core.content.ContextCompat.startActivity
 import androidx.recyclerview.widget.RecyclerView
 import com.example.musicapplication.DataBase.SongInstance
-import com.example.musicapplication.Fragments.SongsPlaylistFragment
-import com.example.musicapplication.MainActivity
 import com.example.musicapplication.R
-import com.example.musicapplication.SongActivity.SongActivity
 import com.example.musicapplication.databinding.AddSongInstanceBinding
 
 class AddSongAdapter(private val listener: Listener): RecyclerView.Adapter<AddSongAdapter.SongHolder>() {
@@ -26,8 +19,11 @@ class AddSongAdapter(private val listener: Listener): RecyclerView.Adapter<AddSo
             songTitle.text = song.title
             songAuthor.text = song.author
 
+            holder.setOnClickListener {
+                listener.onClickShowSong(song)
+            }
             addSongButton.setOnClickListener {
-                listener.onClick(song)
+                listener.onClickAddSong(song)
             }
         }
     }
@@ -71,7 +67,8 @@ class AddSongAdapter(private val listener: Listener): RecyclerView.Adapter<AddSo
     }
 
     interface Listener {
-        fun onClick(song: SongInstance) {}
+        fun onClickShowSong(song: SongInstance) {}
+        fun onClickAddSong(song: SongInstance) {}
     }
 
 }

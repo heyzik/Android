@@ -5,11 +5,11 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".AddSongActivity.SongListActivity"
-    android:background="@color/background">
+    android:background="@drawable/main_bg"
+    tools:context=".SongListActivity.SongList">
 
     <include
-        android:id="@+id/songListInclude"
+        android:id="@+id/songListActivityInclude"
         layout="@layout/action_bar"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
@@ -22,43 +22,51 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
-        android:layout_marginTop="16dp"
         android:layout_marginEnd="16dp"
         android:background="@drawable/search_view_bg"
-        android:iconifiedByDefault="false"
-        android:queryHint="Search ..."
         app:closeIcon="@drawable/ic_close"
+        app:iconifiedByDefault="false"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/songListInclude"
-        app:searchHintIcon="@color/background"
-        app:searchIcon="@drawable/ic_search" >
+        app:layout_constraintTop_toBottomOf="@+id/songListActivityInclude"
+        app:queryBackground="@android:color/transparent"
+        app:queryHint="Search for a song"
+        app:searchHintIcon="@android:color/transparent"
+        app:searchIcon="@drawable/ic_search">
 
     </androidx.appcompat.widget.SearchView>
 
-    <TextView
-        android:id="@+id/noSongsFound"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="16dp"
-        android:text="No songs found"
-        android:textColor="@color/white"
-        android:textSize="20sp"
-        android:visibility="gone"
-        app:layout_constraintEnd_toEndOf="@+id/searchView"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toStartOf="@+id/searchView"
-        app:layout_constraintTop_toBottomOf="@+id/searchView" />
-
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerView"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        app:layout_constraintBottom_toBottomOf="parent"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/noSongsFound" />
+        app:layout_constraintTop_toBottomOf="@+id/searchView" >
 
+    </androidx.recyclerview.widget.RecyclerView>
+
+    <TextView
+        android:id="@+id/firstEmptyView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="It seems empty here... "
+        android:textSize="20sp"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="@+id/searchView"
+        app:layout_constraintStart_toStartOf="@+id/searchView"
+        app:layout_constraintTop_toBottomOf="@+id/searchView"
+        app:layout_constraintVertical_bias="0.42000002" />
+
+    <TextView
+        android:id="@+id/secondEmptyView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Add songs from browse"
+        android:textSize="20sp"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="@+id/firstEmptyView"
+        app:layout_constraintStart_toStartOf="@+id/firstEmptyView"
+        app:layout_constraintTop_toBottomOf="@+id/firstEmptyView" />
 </androidx.constraintlayout.widget.ConstraintLayout>

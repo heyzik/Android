@@ -6,7 +6,7 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import com.example.musicapplication.DataBase.SongInstance
 
-@Database (entities = [SongInstance::class], version = 1, exportSchema = false)
+@Database (entities = [SongInstance::class, AddSongInstance::class], version = 2, exportSchema = false)
 abstract class SongDb : RoomDatabase() {
     abstract fun getDao(): Dao
 
@@ -24,7 +24,9 @@ abstract class SongDb : RoomDatabase() {
                     context.applicationContext,
                     SongDb::class.java,
                     "database.db"
-                ).build()
+                )
+                    .allowMainThreadQueries()
+                    .build()
                 INSTANCE = instance
                 return instance
             }

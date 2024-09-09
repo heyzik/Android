@@ -8,7 +8,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.musicapplication.DataBase.SongInstance
 import com.example.musicapplication.databinding.SongInstanceBinding
 
-class SongAdapter(private val listener: Listener): RecyclerView.Adapter<SongAdapter.SongHolder>() {
+class RemoveSongAdapter(private val listener: Listener): RecyclerView.Adapter<RemoveSongAdapter.SongHolder>() {
     private var songList = ArrayList<SongInstance>()
 
     class SongHolder(item: View): RecyclerView.ViewHolder(item) {
@@ -19,11 +19,10 @@ class SongAdapter(private val listener: Listener): RecyclerView.Adapter<SongAdap
             songAuthor.text = song.author
 
             holder.setOnClickListener {
-                listener.onClick(song)
+                listener.onClickSong(song)
             }
-
             removeSongButton.setOnClickListener {
-                listener.onClickRemove(song)
+                listener.onClickRemoveSong(song)
             }
         }
     }
@@ -39,13 +38,18 @@ class SongAdapter(private val listener: Listener): RecyclerView.Adapter<SongAdap
 
     override fun onBindViewHolder(holder: SongHolder, position: Int) {
         holder.bind(songList[position], listener)
-
     }
 
     @SuppressLint("NotifyDataSetChanged")
     fun addSongs(songs: ArrayList<SongInstance>) {
         songList.clear()
         songList = songs
+        notifyDataSetChanged()
+    }
+
+    @SuppressLint("NotifyDataSetChanged")
+    fun removeSong(song: SongInstance) {
+        songList.remove(song)
         notifyDataSetChanged()
     }
 
@@ -61,13 +65,9 @@ class SongAdapter(private val listener: Listener): RecyclerView.Adapter<SongAdap
         notifyDataSetChanged()
     }
 
-    fun removeSong(song: SongInstance) {
-        songList.remove(song)
-    }
-
     interface Listener {
-        fun onClick(song: SongInstance) {}
-        fun onClickRemove(song: SongInstance) {}
+        fun onClickSong(song: SongInstance) {}
+        fun onClickRemoveSong(song: SongInstance) {}
     }
 
 }
